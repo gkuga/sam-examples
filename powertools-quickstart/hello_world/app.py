@@ -1,16 +1,8 @@
-import logging
-import os
-
+from aws_lambda_powertools import Logger
 from aws_lambda_powertools.event_handler import APIGatewayRestResolver
-from pythonjsonlogger import jsonlogger
+from aws_lambda_powertools.logging import correlation_paths
 
-logger = logging.getLogger("APP")
-logHandler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter(
-    fmt="%(asctime)s %(levelname)s %(name)s %(message)s")
-logHandler.setFormatter(formatter)
-logger.addHandler(logHandler)
-logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
+logger = Logger(service="APP")
 
 app = APIGatewayRestResolver()
 
@@ -27,6 +19,6 @@ def hello():
     return {"message": "hello unknown!"}
 
 
+@logger.inject_lambda_context(correlation_id_path=correlation_paths.API_GATEWAY_REST, log_event=True)
 def lambda_handler(event, context):
-    logger.debug(event)
     return app.resolve(event, context)
